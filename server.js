@@ -36,6 +36,7 @@ app.use(methodOverride('_method'));
 
 // Session configuration using connect-mongo
 app.use(session({
+  name: 'cleartrack.sid',
   secret: process.env.SESSION_SECRET || 'cleartrack_dev_secret_key',
   resave: false,
   saveUninitialized: false,
@@ -55,6 +56,11 @@ app.use(session({
 
 // Global template locals (user, flash notifications)
 app.use(populateLocals);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'healthy', version: '2.0.0', time: new Date().toISOString() });
+});
 
 // Route Handlers
 app.get('/', (req, res) => {
