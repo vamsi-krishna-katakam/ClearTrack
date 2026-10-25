@@ -1,0 +1,95 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title"><%= employee.name %></h1>
+      <p class="page-subtitle">User ID: <strong><%= employee.userId %></strong> &bull; <%= employee.department %></p>
+    </div>
+    <div class="header-actions">
+      <% if (!employee.isDeactivated) { %>
+        <a href="/employees/<%= employee._id %>/edit" class="btn btn-secondary">Edit Profile</a>
+        <form action="/employees/<%= employee._id %>/deactivate" method="POST" onsubmit="return confirm('Deactivating this account preserves all task history but prevents the employee from signing in. Continue?');" style="display:inline;">
+          <button type="submit" class="btn btn-danger">Deactivate Account</button>
+        </form>
+      <% } else { %>
+        <span class="badge badge-danger">Account Deactivated</span>
+      <% } %>
+      <a href="/employees" class="btn btn-secondary">&larr; Directory</a>
+    </div>
+  </div>
+
+  <%- include('../partials/flash') %>
+
+  <div class="profile-meta-card">
+    <div class="meta-item">
+      <span class="meta-label">Email</span>
+      <span class="meta-value"><%= employee.email %></span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Department</span>
+      <span class="meta-value"><%= employee.department %></span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Total Assigned Tasks</span>
+      <span class="meta-value"><%= tasks.length %></span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Account Created</span>
+      <span class="meta-value"><%= new Date(employee.createdAt).toLocaleDateString() %></span>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <h2 class="section-title">Assigned Compliance Tasks (<%= tasks.length %>)</h2>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Task Title</th>
+            <th>Priority</th>
+            <th>Progress Status</th>
+            <th>Review Status</th>
+            <th>Deadline</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (tasks.length === 0) { %>
+            <tr>
+              <td colspan="6" class="empty-state">No compliance tasks assigned to this employee.</td>
+            </tr>
+          <% } %>
+          <% tasks.forEach(task => { %>
+            <tr>
+              <td>
+                <a href="/tasks/<%= task._id %>" class="task-link"><%= task.title %></a>
+                <% if (task.isOverdue) { %>
+                  <span class="badge badge-overdue">Overdue</span>
+                <% } %>
+              </td>
+              <td><span class="badge badge-priority-<%= task.priority.toLowerCase() %>"><%= task.priority %></span></td>
+              <td><%= task.progressStatus %></td>
+              <td>
+                <% if (task.reviewStatus === 'Verified') { %>
+                  <span class="badge badge-success">Verified</span>
+                <% } else if (task.reviewStatus === 'Changes Requested') { %>
+                  <span class="badge badge-warning">Changes Requested</span>
+                <% } else { %>
+                  <span class="badge badge-secondary">Not Reviewed</span>
+                <% } %>
+              </td>
+              <td><%= new Date(task.deadline).toLocaleDateString() %></td>
+              <td>
+                <a href="/tasks/<%= task._id %>" class="btn btn-secondary btn-sm">View Details</a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

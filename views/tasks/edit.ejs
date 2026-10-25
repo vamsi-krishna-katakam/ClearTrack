@@ -1,0 +1,73 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<main class="main-content">
+  <div class="form-container">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Edit Compliance Task</h1>
+        <p class="page-subtitle">Update task requirements, reassign, or adjust the deadline</p>
+      </div>
+      <a href="/tasks/<%= task._id %>" class="btn btn-secondary">&larr; Back to Task</a>
+    </div>
+
+    <%- include('../partials/flash') %>
+
+    <form action="/tasks/<%= task._id %>" method="POST" class="form-card">
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label for="title">Task Title <span class="required">*</span></label>
+          <input type="text" id="title" name="title" value="<%= task.title %>" required>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="description">Task Description & Requirements <span class="required">*</span></label>
+          <textarea id="description" name="description" rows="4" required><%= task.description %></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category</label>
+          <input type="text" id="category" name="category" value="<%= task.category %>">
+        </div>
+
+        <div class="form-group">
+          <label for="priority">Priority <span class="required">*</span></label>
+          <select id="priority" name="priority" required>
+            <option value="Low" <%= task.priority === 'Low' ? 'selected' : '' %>>Low</option>
+            <option value="Medium" <%= task.priority === 'Medium' ? 'selected' : '' %>>Medium</option>
+            <option value="High" <%= task.priority === 'High' ? 'selected' : '' %>>High</option>
+            <option value="Critical" <%= task.priority === 'Critical' ? 'selected' : '' %>>Critical</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="assignee">Assignee <span class="required">*</span></label>
+          <select id="assignee" name="assignee" required>
+            <% employees.forEach(emp => { %>
+              <option value="<%= emp._id %>" <%= task.assignee.toString() === emp._id.toString() ? 'selected' : '' %>>
+                <%= emp.name %> (<%= emp.userId %>)
+              </option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="deadline">Deadline Date <span class="required">*</span></label>
+          <input type="date" id="deadline" name="deadline" value="<%= new Date(task.deadline).toISOString().split('T')[0] %>" required>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="editReason">Modification Reason (Recorded in Audit Log)</label>
+          <input type="text" id="editReason" name="editReason" placeholder="Explain why details or deadlines are being updated">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save Task Changes</button>
+        <a href="/tasks/<%= task._id %>" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

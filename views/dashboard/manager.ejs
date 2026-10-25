@@ -1,0 +1,197 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Manager Compliance Overview</h1>
+      <p class="page-subtitle">Welcome back, <%= user.name %> &bull; Track compliance obligations and verify evidence</p>
+    </div>
+    <div class="header-actions">
+      <a href="/tasks/new" class="btn btn-primary">+ Create Task</a>
+      <a href="/employees/new" class="btn btn-secondary">+ Add Employee</a>
+    </div>
+  </div>
+
+  <%- include('../partials/flash') %>
+
+  <!-- STATS CARDS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value"><%= stats.totalTasks %></div>
+      <div class="stat-label">Total Tasks</div>
+    </div>
+    <div class="stat-card stat-pending">
+      <div class="stat-value"><%= stats.pendingTasks %></div>
+      <div class="stat-label">Pending Start</div>
+    </div>
+    <div class="stat-card stat-progress">
+      <div class="stat-value"><%= stats.inProgressTasks %></div>
+      <div class="stat-label">In Progress</div>
+    </div>
+    <div class="stat-card stat-review">
+      <div class="stat-value"><%= stats.submittedTasks %></div>
+      <div class="stat-label">Submitted for Review</div>
+    </div>
+    <div class="stat-card stat-verified">
+      <div class="stat-value"><%= stats.verifiedTasks %></div>
+      <div class="stat-label">Verified & Completed</div>
+    </div>
+    <div class="stat-card stat-overdue">
+      <div class="stat-value"><%= stats.overdueTasks %></div>
+      <div class="stat-label">Overdue Tasks</div>
+    </div>
+  </div>
+
+  <div class="dashboard-columns">
+    <!-- LEFT: Review Queue & Upcoming -->
+    <div class="dashboard-col">
+      <!-- REVIEW QUEUE -->
+      <div class="section-card">
+        <div class="section-header-row">
+          <h2 class="section-title">Review Queue (<%= reviewQueue.length %>)</h2>
+          <span class="badge badge-warning">Awaiting Manager Verification</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Task Title</th>
+                <th>Assignee</th>
+                <th>Deadline</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (reviewQueue.length === 0) { %>
+                <tr>
+                  <td colspan="4" class="empty-state">No tasks waiting for review. You're all caught up!</td>
+                </tr>
+              <% } %>
+              <% reviewQueue.forEach(task => { %>
+                <tr>
+                  <td>
+                    <a href="/tasks/<%= task._id %>" class="task-link"><strong><%= task.title %></strong></a>
+                    <% if (task.isOverdue) { %><span class="badge badge-overdue">Overdue</span><% } %>
+                  </td>
+                  <td><%= task.assignee.name %></td>
+                  <td><%= new Date(task.deadline).toLocaleDateString() %></td>
+                  <td>
+                    <a href="/tasks/<%= task._id %>" class="btn btn-primary btn-sm">Review Evidence &rarr;</a>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- UPCOMING DEADLINES -->
+      <div class="section-card">
+        <h2 class="section-title">Tasks Approaching Deadlines (Next 7 Days)</h2>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Task Title</th>
+                <th>Assignee</th>
+                <th>Status</th>
+                <th>Deadline</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (upcomingTasks.length === 0) { %>
+                <tr>
+                  <td colspan="4" class="empty-state">No urgent deadlines approaching this week.</td>
+                </tr>
+              <% } %>
+              <% upcomingTasks.forEach(task => { %>
+                <tr>
+                  <td>
+                    <a href="/tasks/<%= task._id %>" class="task-link"><%= task.title %></a>
+                  </td>
+                  <td><%= task.assignee.name %></td>
+                  <td><%= task.progressStatus %></td>
+                  <td><strong><%= new Date(task.deadline).toLocaleDateString() %></strong></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Team Performance & Recent Audit -->
+    <div class="dashboard-col">
+      <!-- EMPLOYEE STATISTICS -->
+      <div class="section-card">
+        <div class="section-header-row">
+          <h2 class="section-title">Team Compliance Performance</h2>
+          <a href="/employees" class="view-all-link">View Directory &rarr;</a>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Tasks</th>
+                <th>Verified</th>
+                <th>Overdue</th>
+                <th>Completion</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (employeeStats.length === 0) { %>
+                <tr><td colspan="5" class="empty-state">No active employees found.</td></tr>
+              <% } %>
+              <% employeeStats.forEach(emp => { %>
+                <tr>
+                  <td><a href="/employees/<%= emp.id %>" class="task-link"><%= emp.name %></a></td>
+                  <td><%= emp.total %></td>
+                  <td><%= emp.completed %></td>
+                  <td>
+                    <% if (emp.overdue > 0) { %>
+                      <span class="badge badge-overdue"><%= emp.overdue %></span>
+                    <% } else { %>
+                      0
+                    <% } %>
+                  </td>
+                  <td>
+                    <div class="progress-bar-container">
+                      <div class="progress-bar-fill" style="width: <%= emp.rate %>%"></div>
+                    </div>
+                    <span style="font-size:0.8rem; color:var(--text-muted);"><%= emp.rate %>%</span>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RECENT AUDIT ACTIVITY -->
+      <div class="section-card">
+        <div class="section-header-row">
+          <h2 class="section-title">Recent Audit Log</h2>
+          <a href="/audit-logs" class="view-all-link">Full Audit Trail &rarr;</a>
+        </div>
+        <div class="audit-mini-list">
+          <% if (recentAudit.length === 0) { %>
+            <p class="empty-state">No audit activities recorded.</p>
+          <% } %>
+          <% recentAudit.forEach(log => { %>
+            <div class="audit-mini-item">
+              <div>
+                <span class="badge badge-audit"><%= log.action %></span>
+                <span style="font-size:0.85rem; margin-left:0.35rem;">by <%= log.actor ? log.actor.name : 'System' %></span>
+              </div>
+              <span class="audit-time"><%= new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></span>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

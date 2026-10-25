@@ -1,0 +1,11 @@
+<% if (typeof successMsg !== 'undefined' && successMsg) { %>
+  <div class="alert alert-success">
+    <span><%= successMsg %></span>
+  </div>
+<% } %>
+
+<% if (typeof errorMsg !== 'undefined' && errorMsg) { %>
+  <div class="alert alert-danger">
+    <span><%= errorMsg %></span>
+  </div>
+<% } %>

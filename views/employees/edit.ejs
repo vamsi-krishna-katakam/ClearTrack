@@ -1,0 +1,48 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<main class="main-content">
+  <div class="form-container">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Edit Profile — <%= employee.name %></h1>
+        <p class="page-subtitle">Update contact and organizational details</p>
+      </div>
+      <a href="/employees/<%= employee._id %>" class="btn btn-secondary">&larr; Back to Profile</a>
+    </div>
+
+    <%- include('../partials/flash') %>
+
+    <form action="/employees/<%= employee._id %>" method="POST" class="form-card">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="userId">User ID</label>
+          <input type="text" id="userId" value="<%= employee.userId %>" disabled>
+          <small class="form-help">User IDs are permanent and cannot be changed.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="name">Full Name <span class="required">*</span></label>
+          <input type="text" id="name" name="name" value="<%= employee.name %>" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address <span class="required">*</span></label>
+          <input type="email" id="email" name="email" value="<%= employee.email %>" required>
+        </div>
+
+        <div class="form-group">
+          <label for="department">Department</label>
+          <input type="text" id="department" name="department" value="<%= employee.department %>">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save Profile Changes</button>
+        <a href="/employees/<%= employee._id %>" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

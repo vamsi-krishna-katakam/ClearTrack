@@ -1,0 +1,49 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<main class="main-content">
+  <section class="hero-section">
+    <div class="hero-badge">Compliance Action & Evidence Management</div>
+    <h1 class="hero-title">Track Actions. Collect Evidence. Verify Completion.</h1>
+    <p class="hero-subtitle">
+      ClearTrack helps teams assign compliance tasks, collect immutable evidence versions,
+      and verify that compliance actions are actually completed on time.
+    </p>
+
+    <div class="hero-actions">
+      <% if (locals.user) { %>
+        <a href="/dashboard" class="btn btn-primary">Go to Dashboard &rarr;</a>
+      <% } else { %>
+        <a href="/auth/login" class="btn btn-primary">Sign In to Workspace &rarr;</a>
+      <% } %>
+    </div>
+  </section>
+
+  <section class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <h3>Action Delegation</h3>
+      <p>Managers assign compliance obligations with clear deadlines, categories, and priority levels.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🔗</div>
+      <h3>Evidence Versioning</h3>
+      <p>Employees submit evidence URLs and completion notes. Revisions are saved as new versions without overwriting history.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🔍</div>
+      <h3>Two-Tier Verification</h3>
+      <p>Tasks are only finished when verified by a manager. Any change request requires an explicit reason.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🛡️</div>
+      <h3>Immutable Audit Trail</h3>
+      <p>Every assignment, deadline change, submission, and review decision is automatically logged.</p>
+    </div>
+  </section>
+</main>
+
+<%- include('partials/footer') %>

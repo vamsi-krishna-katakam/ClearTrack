@@ -1,0 +1,67 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<main class="main-content">
+  <div class="form-container">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Create Compliance Task</h1>
+        <p class="page-subtitle">Assign a compliance action, priority, and deadline to a team member</p>
+      </div>
+      <a href="/tasks" class="btn btn-secondary">&larr; Back to Tasks</a>
+    </div>
+
+    <%- include('../partials/flash') %>
+
+    <form action="/tasks" method="POST" class="form-card">
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label for="title">Task Title <span class="required">*</span></label>
+          <input type="text" id="title" name="title" required placeholder="e.g. Annual SOC 2 Access Control Review">
+        </div>
+
+        <div class="form-group full-width">
+          <label for="description">Task Description & Requirements <span class="required">*</span></label>
+          <textarea id="description" name="description" rows="4" required placeholder="Detail the exact steps and evidence expected from the assignee..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category</label>
+          <input type="text" id="category" name="category" placeholder="e.g. Data Protection, Financial, Access Review">
+        </div>
+
+        <div class="form-group">
+          <label for="priority">Priority <span class="required">*</span></label>
+          <select id="priority" name="priority" required>
+            <option value="Low">Low</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="assignee">Assignee <span class="required">*</span></label>
+          <select id="assignee" name="assignee" required>
+            <option value="">Select Team Member</option>
+            <% employees.forEach(emp => { %>
+              <option value="<%= emp._id %>"><%= emp.name %> (<%= emp.userId %> &bull; <%= emp.role %>)</option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="deadline">Deadline Date <span class="required">*</span></label>
+          <input type="date" id="deadline" name="deadline" required>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Create and Assign Task</button>
+        <a href="/tasks" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

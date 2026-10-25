@@ -1,0 +1,120 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">My Compliance Tasks</h1>
+      <p class="page-subtitle">Welcome back, <%= user.name %> &bull; <%= user.department %> Department</p>
+    </div>
+    <a href="/auth/change-password" class="btn btn-secondary btn-sm">Update Password</a>
+  </div>
+
+  <%- include('../partials/flash') %>
+
+  <!-- STATS CARDS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value"><%= stats.totalTasks %></div>
+      <div class="stat-label">Total Assigned</div>
+    </div>
+    <div class="stat-card stat-pending">
+      <div class="stat-value"><%= stats.pendingTasks %></div>
+      <div class="stat-label">Pending Start</div>
+    </div>
+    <div class="stat-card stat-progress">
+      <div class="stat-value"><%= stats.inProgressTasks %></div>
+      <div class="stat-label">In Progress</div>
+    </div>
+    <div class="stat-card stat-review">
+      <div class="stat-value"><%= stats.submittedTasks %></div>
+      <div class="stat-label">Under Review</div>
+    </div>
+    <div class="stat-card stat-verified">
+      <div class="stat-value"><%= stats.verifiedTasks %></div>
+      <div class="stat-label">Completed & Verified</div>
+    </div>
+    <div class="stat-card stat-overdue">
+      <div class="stat-value"><%= stats.overdueTasks %></div>
+      <div class="stat-label">Overdue Tasks</div>
+    </div>
+  </div>
+
+  <!-- ACTION NEEDED BANNER (If Corrections Requested) -->
+  <% if (actionNeeded.some(t => t.reviewStatus === 'Changes Requested')) { %>
+    <div class="alert alert-danger" style="margin-bottom: 2rem;">
+      <strong>Action Required:</strong> The manager has requested corrections on one or more of your submissions. Please check the tasks marked with "Changes Requested" below to submit revised evidence.
+    </div>
+  <% } %>
+
+  <div class="dashboard-columns">
+    <!-- LEFT: Action Items / Priority Tasks -->
+    <div class="dashboard-col" style="flex: 2;">
+      <div class="section-card">
+        <div class="section-header-row">
+          <h2 class="section-title">Active Assigned Tasks (<%= upcomingTasks.length %>)</h2>
+          <a href="/tasks" class="view-all-link">View All Tasks &rarr;</a>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Task Title</th>
+                <th>Priority</th>
+                <th>Progress</th>
+                <th>Review Status</th>
+                <th>Deadline</th>
+                <th class="text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (upcomingTasks.length === 0) { %>
+                <tr>
+                  <td colspan="6" class="empty-state">No pending compliance tasks. Excellent work!</td>
+                </tr>
+              <% } %>
+              <% upcomingTasks.forEach(task => { %>
+                <tr>
+                  <td>
+                    <a href="/tasks/<%= task._id %>" class="task-link"><strong><%= task.title %></strong></a>
+                    <% if (task.isOverdue) { %><span class="badge badge-overdue">Overdue</span><% } %>
+                  </td>
+                  <td><span class="badge badge-priority-<%= task.priority.toLowerCase() %>"><%= task.priority %></span></td>
+                  <td><%= task.progressStatus %></td>
+                  <td>
+                    <% if (task.reviewStatus === 'Verified') { %>
+                      <span class="badge badge-success">Verified</span>
+                    <% } else if (task.reviewStatus === 'Changes Requested') { %>
+                      <span class="badge badge-warning">Changes Requested</span>
+                    <% } else { %>
+                      <span class="badge badge-secondary">Not Reviewed</span>
+                    <% } %>
+                  </td>
+                  <td><%= new Date(task.deadline).toLocaleDateString() %></td>
+                  <td class="text-right">
+                    <a href="/tasks/<%= task._id %>" class="btn btn-primary btn-sm">View & Submit &rarr;</a>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Instructions & Guidelines -->
+    <div class="dashboard-col" style="flex: 1;">
+      <div class="section-card">
+        <h2 class="section-title">Compliance Guide</h2>
+        <div style="font-size:0.9rem; color:var(--text-muted); line-height:1.6;">
+          <p style="margin-bottom: 0.75rem;"><strong>1. Start Work:</strong> Open your assigned task and click "Start Task" to indicate progress.</p>
+          <p style="margin-bottom: 0.75rem;"><strong>2. Provide Evidence:</strong> Submit accessible external URLs (documentation, logs, cloud reports) confirming completion.</p>
+          <p style="margin-bottom: 0.75rem;"><strong>3. Late Submissions:</strong> Tasks marked Overdue can still be submitted and completed without penalty.</p>
+          <p><strong>4. Verification:</strong> Your task is complete once your manager reviews and verifies your evidence.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

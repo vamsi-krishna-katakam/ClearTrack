@@ -1,0 +1,200 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <div class="task-badge-row">
+        <span class="badge badge-priority-<%= task.priority.toLowerCase() %>"><%= task.priority %> Priority</span>
+        <span class="badge badge-category"><%= task.category %></span>
+        <% if (task.isOverdue) { %>
+          <span class="badge badge-overdue">Overdue</span>
+        <% } %>
+      </div>
+      <h1 class="page-title"><%= task.title %></h1>
+      <p class="page-subtitle">Assigned to: <strong><%= task.assignee.name %></strong> (<%= task.assignee.userId %>) &bull; Created by <%= task.createdBy.name %></p>
+    </div>
+    <div class="header-actions">
+      <% if (isManager) { %>
+        <a href="/tasks/<%= task._id %>/edit" class="btn btn-secondary">Edit Task</a>
+      <% } %>
+      <a href="/tasks" class="btn btn-secondary">&larr; Back to Tasks</a>
+    </div>
+  </div>
+
+  <%- include('../partials/flash') %>
+
+  <!-- Overdue Banner (Derived dynamically, non-blocking) -->
+  <% if (task.isOverdue) { %>
+    <div class="alert alert-warning">
+      <strong>Notice:</strong> This compliance task passed its deadline on <%= new Date(task.deadline).toLocaleDateString() %>. You may still submit evidence or complete verification.
+    </div>
+  <% } %>
+
+  <!-- Correction Notice (Role-Aware) -->
+  <% if (task.reviewStatus === 'Changes Requested') { %>
+    <% if (isManager) { %>
+      <div class="alert alert-warning">
+        <strong>Corrections Requested:</strong> You returned this task to <strong><%= task.assignee.name %></strong> with feedback:
+        <p style="margin-top:0.35rem; font-style:italic;">&ldquo;<%= task.latestReviewComment %>&rdquo;</p>
+        <small style="display:block; margin-top:0.25rem; color:var(--text-muted);">Awaiting revised evidence submission from the employee.</small>
+      </div>
+    <% } else { %>
+      <div class="alert alert-danger">
+        <strong>Corrections Requested by Manager:</strong>
+        <p style="margin-top:0.35rem; font-weight:600;">&ldquo;<%= task.latestReviewComment %>&rdquo;</p>
+        <small style="display:block; margin-top:0.25rem;">Please review the feedback above, prepare corrected evidence, and submit an updated version below.</small>
+      </div>
+    <% } %>
+  <% } %>
+
+  <!-- Verified Notice -->
+  <% if (task.reviewStatus === 'Verified') { %>
+    <div class="alert alert-success">
+      <strong>Task Completed & Verified:</strong> This compliance action has been officially verified by management on <%= new Date(task.updatedAt).toLocaleDateString() %>.
+    </div>
+  <% } %>
+
+  <!-- Task Details Grid -->
+  <div class="task-meta-grid">
+    <div class="task-meta-card">
+      <span class="meta-label">Progress Status</span>
+      <span class="meta-value"><strong><%= task.progressStatus %></strong></span>
+    </div>
+    <div class="task-meta-card">
+      <span class="meta-label">Manager Review Status</span>
+      <span class="meta-value">
+        <% if (task.reviewStatus === 'Verified') { %>
+          <span class="badge badge-success">Verified</span>
+        <% } else if (task.reviewStatus === 'Changes Requested') { %>
+          <span class="badge badge-warning">Changes Requested</span>
+        <% } else { %>
+          <span class="badge badge-secondary">Not Reviewed</span>
+        <% } %>
+      </span>
+    </div>
+    <div class="task-meta-card">
+      <span class="meta-label">Deadline</span>
+      <span class="meta-value"><%= new Date(task.deadline).toLocaleDateString() %></span>
+    </div>
+    <div class="task-meta-card">
+      <span class="meta-label">Department</span>
+      <span class="meta-value"><%= task.assignee.department %></span>
+    </div>
+  </div>
+
+  <!-- Description Section -->
+  <div class="section-card">
+    <h3 class="section-heading">Description & Requirements</h3>
+    <div class="task-description-body">
+      <%= task.description %>
+    </div>
+  </div>
+
+  <!-- ACTION SECTION: Employee Controls -->
+  <% if (isAssignee && task.reviewStatus !== 'Verified') { %>
+    <div class="section-card action-panel">
+      <h3 class="section-heading">Employee Actions</h3>
+
+      <!-- Step 1: Move from Pending to In Progress -->
+      <% if (task.progressStatus === 'Pending') { %>
+        <form action="/tasks/<%= task._id %>/progress" method="POST" style="margin-bottom: 1.5rem;">
+          <input type="hidden" name="progressStatus" value="In Progress">
+          <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Ready to start working on this compliance obligation?</p>
+          <button type="submit" class="btn btn-primary">Start Task (Move to In Progress)</button>
+        </form>
+      <% } %>
+
+      <!-- Step 2: Evidence Submission / Resubmission -->
+      <form action="/tasks/<%= task._id %>/evidence" method="POST" class="form-stack">
+        <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">
+          <%= evidenceVersions.length > 0 ? 'Submit Corrected Evidence (New Version)' : 'Submit Completion Evidence' %>
+        </h4>
+        <div class="form-group">
+          <label for="evidenceUrl">Evidence URLs <span class="required">*</span></label>
+          <textarea id="evidenceUrl" name="evidenceUrl" rows="2" required placeholder="https://docs.company.com/evidence-report-1&#10;https://storage.company.com/scan-result.pdf"></textarea>
+          <small class="form-help">Enter one or more external URLs (separated by newlines or commas). Direct file uploads are disabled for security.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Completion Notes & Explanations</label>
+          <textarea id="notes" name="notes" rows="3" placeholder="Describe the steps performed, findings, or how corrections were applied..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          <%= evidenceVersions.length > 0 ? 'Resubmit Evidence' : 'Submit Evidence' %>
+        </button>
+      </form>
+    </div>
+  <% } %>
+
+  <!-- ACTION SECTION: Manager Review Controls (Visible when evidence needs review) -->
+  <% if (isManager && task.progressStatus === 'Submitted for Review' && task.reviewStatus === 'Not Reviewed') { %>
+    <div class="section-card action-panel manager-panel">
+      <h3 class="section-heading">Manager Evidence Review</h3>
+      <p style="margin-bottom: 1rem; color: var(--text-muted);">
+        Review the submitted evidence versions below. Either verify the task as officially complete or return it with correction instructions.
+      </p>
+
+      <div class="review-actions-grid">
+        <!-- Verification Form -->
+        <form action="/tasks/<%= task._id %>/review" method="POST" onsubmit="return confirm('Verify this task as fully completed?');">
+          <input type="hidden" name="decision" value="Verified">
+          <button type="submit" class="btn btn-success btn-block">✓ Verify & Complete Task</button>
+        </form>
+
+        <!-- Changes Requested Form -->
+        <form action="/tasks/<%= task._id %>/review" method="POST" class="form-stack">
+          <input type="hidden" name="decision" value="Changes Requested">
+          <div class="form-group">
+            <label for="reason">Correction Reason <span class="required">*</span></label>
+            <textarea id="reason" name="reason" rows="2" required placeholder="Specify why the evidence is insufficient and what changes are required..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-danger btn-block">Request Corrections</button>
+        </form>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- EVIDENCE VERSION HISTORY -->
+  <div class="section-card">
+    <h3 class="section-heading">Evidence Version History (<%= evidenceVersions.length %>)</h3>
+    <% if (evidenceVersions.length === 0) { %>
+      <p class="empty-state">No evidence has been submitted for this task yet.</p>
+    <% } %>
+
+    <div class="evidence-timeline">
+      <% evidenceVersions.forEach(ev => { %>
+        <div class="evidence-item">
+          <div class="evidence-header">
+            <span class="badge badge-version">Version <%= ev.versionNumber %></span>
+            <span class="evidence-meta">
+              Submitted by <%= ev.submittedBy.name %> on <%= new Date(ev.createdAt).toLocaleString() %>
+            </span>
+          </div>
+
+          <div class="evidence-body">
+            <% if (ev.notes) { %>
+              <p class="evidence-notes"><strong>Notes:</strong> <%= ev.notes %></p>
+            <% } %>
+
+            <div class="evidence-links">
+              <strong>Evidence Links:</strong>
+              <ul>
+                <% ev.evidenceUrls.forEach(url => { %>
+                  <li>
+                    <a href="<%= url %>" target="_blank" rel="noopener noreferrer" class="external-evidence-link">
+                      <%= url %> &nearr;
+                    </a>
+                  </li>
+                <% }) %>
+              </ul>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

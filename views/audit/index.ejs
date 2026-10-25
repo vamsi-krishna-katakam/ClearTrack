@@ -1,0 +1,73 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Compliance Audit Trail</h1>
+      <p class="page-subtitle">Append-only log of all security, task lifecycle, and verification events</p>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Actor</th>
+          <th>Event Type</th>
+          <th>Target</th>
+          <th>Details & Changes</th>
+          <th>Reason / Comment</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (logs.length === 0) { %>
+          <tr>
+            <td colspan="6" class="empty-state">No audit logs recorded yet.</td>
+          </tr>
+        <% } %>
+        <% logs.forEach(log => { %>
+          <tr>
+            <td style="white-space:nowrap; font-size:0.85rem; color:var(--text-muted);">
+              <%= new Date(log.createdAt).toLocaleString() %>
+            </td>
+            <td>
+              <%= log.actor ? `${log.actor.name} (${log.actor.userId})` : 'System' %>
+            </td>
+            <td>
+              <span class="badge badge-audit"><%= log.action %></span>
+            </td>
+            <td>
+              <%= log.targetType %> 
+              <% if (log.targetType === 'Task') { %>
+                <a href="/tasks/<%= log.targetId %>" class="task-link" style="font-size:0.85rem;">[View]</a>
+              <% } %>
+            </td>
+            <td style="max-width: 320px; font-size: 0.85rem;">
+              <% if (log.previousValues || log.newValues) { %>
+                <% if (log.previousValues) { %>
+                  <div class="diff-block diff-prev">
+                    <strong>Before:</strong> <%= JSON.stringify(log.previousValues) %>
+                  </div>
+                <% } %>
+                <% if (log.newValues) { %>
+                  <div class="diff-block diff-next">
+                    <strong>After:</strong> <%= JSON.stringify(log.newValues) %>
+                  </div>
+                <% } %>
+              <% } else { %>
+                <span class="text-muted">Standard action executed</span>
+              <% } %>
+            </td>
+            <td>
+              <%= log.reason ? log.reason : '—' %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

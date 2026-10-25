@@ -1,0 +1,63 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Team Directory</h1>
+      <p class="page-subtitle">Manage employee accounts and view compliance assignments</p>
+    </div>
+    <a href="/employees/new" class="btn btn-primary">+ Add New Employee</a>
+  </div>
+
+  <%- include('../partials/flash') %>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Department</th>
+          <th>Status</th>
+          <th>Joined</th>
+          <th class="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (employees.length === 0) { %>
+          <tr>
+            <td colspan="7" class="empty-state">No employees found. Create the first team member above.</td>
+          </tr>
+        <% } %>
+        <% employees.forEach(emp => { %>
+          <tr>
+            <td><strong><%= emp.userId %></strong></td>
+            <td><%= emp.name %></td>
+            <td><%= emp.email %></td>
+            <td><%= emp.department %></td>
+            <td>
+              <% if (emp.isDeactivated) { %>
+                <span class="badge badge-danger">Deactivated</span>
+              <% } else if (emp.mustChangePassword) { %>
+                <span class="badge badge-warning">Pending First Login</span>
+              <% } else { %>
+                <span class="badge badge-success">Active</span>
+              <% } %>
+            </td>
+            <td><%= new Date(emp.createdAt).toLocaleDateString() %></td>
+            <td class="text-right table-actions">
+              <a href="/employees/<%= emp._id %>" class="btn btn-secondary btn-sm">View Profile</a>
+              <% if (!emp.isDeactivated) { %>
+                <a href="/employees/<%= emp._id %>/edit" class="btn btn-secondary btn-sm">Edit</a>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>
