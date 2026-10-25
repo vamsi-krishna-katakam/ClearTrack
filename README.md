@@ -3,6 +3,7 @@
 > A simple, clear web application for tracking compliance tasks, submitting evidence, and getting manager approvals.
 
 🌐 **Live Application**: [https://clear-track-one.vercel.app](https://clear-track-one.vercel.app)  
+🎥 **Demo Walkthrough Video**: [Watch 2-Minute Demo on Google Drive](https://drive.google.com/file/d/1lmMhFttHOsY0yxfJmsUhV6mDnxUSe4Na/view?usp=sharing)  
 *(Backup Mirror: https://cleartrack-dtu6.onrender.com)*
 
 **Quick Demo Credentials:**
