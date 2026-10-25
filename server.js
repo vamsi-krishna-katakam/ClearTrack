@@ -21,8 +21,8 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Trust reverse proxy (required for Render / cloud hosts terminating SSL)
-app.set('trust proxy', 1);
+// Trust reverse proxy (required for Render / Cloudflare / cloud hosts terminating SSL)
+app.set('trust proxy', true);
 
 // View engine setup
 app.set('view engine', 'ejs');
@@ -47,7 +47,7 @@ app.use(session({
   }),
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Ensures session cookie is reliably delivered through reverse proxies
     sameSite: 'lax',
     maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
   }
