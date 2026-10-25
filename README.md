@@ -1,236 +1,202 @@
 # ClearTrack — Compliance Action & Evidence Tracker
 
-> A lightweight, audit-ready compliance action and evidence tracking web application designed for small and growing teams.
+> A simple, clear web application for tracking compliance tasks, submitting evidence, and getting manager approvals.
 
 ---
 
 ## 1. Project Overview
 
-ClearTrack enables organizations to assign compliance-related obligations, monitor progress, collect versioned completion evidence, and require formal managerial verification before tasks are marked complete.
+ClearTrack helps teams stay on top of compliance tasks. Managers can assign tasks with deadlines, employees can submit proof (links and notes) when finished, and managers review and approve the work.
 
-Built with a clean, explainable **Node.js, Express, MongoDB, and EJS** architecture without unnecessary abstractions or black-box libraries.
+Built with **Node.js, Express, MongoDB, and EJS**. The code is simple, clean, and uses standard web technologies without complicated setup.
 
 ---
 
 ## 2. Problem Statement & Target Users
 
 ### The Problem
-Small teams often fail compliance reviews because:
-- Compliance items are tracked in ad-hoc spreadsheets.
-- Team members self-certify completion without submitting supporting proof.
-- When an action is submitted late, systems lock users out or create bottlenecks.
-- Revision history is lost when evidence is updated or replaced.
+Small teams often struggle with compliance because:
+- Tasks are tracked in spreadsheets and easily forgotten.
+- Team members mark tasks as done without showing any proof.
+- When an employee is late, tools often lock them out instead of letting them submit.
+- When proof is updated, previous submissions get overwritten and lost.
 
 ### Target Users
-- **Compliance Managers & Team Leads**: Assign compliance tasks, track overdue obligations across the team, review submitted evidence, verify completion, and inspect audit logs.
-- **Employees & Assignees**: Review assigned compliance requirements, update task progress, submit evidence URLs, respond to revision requests, and maintain compliance records.
+- **Managers / Team Leads**: Create tasks, set deadlines, assign them to team members, review submitted proof, and approve or request changes.
+- **Employees / Assignees**: See their assigned tasks, update progress, submit proof links, and resubmit if changes are needed.
 
 ---
 
 ## 3. Key Features
 
-- **Role-Based Workflows**: Separate, secure experiences for Managers and Employees.
-- **Two-Tier Status Architecture**: Separates employee progress (`Pending`, `In Progress`, `Submitted for Review`) from manager verification (`Not Reviewed`, `Verified`, `Changes Requested`).
-- **Dynamic Overdue Tracking**: Overdue is derived at runtime (`now > deadline && unverified`). It identifies late items clearly without blocking employees from submitting late work.
-- **Immutable Evidence Versioning**: When evidence is resubmitted, the system creates version `N+1` while preserving previous links, notes, and timestamps.
-- **Mandatory Review Reasons**: Managers cannot request corrections without providing an explicit, recorded reason.
-- **Append-Only Audit Trail**: All task creations, edits, deadline adjustments, evidence submissions, and review decisions are logged in MongoDB `auditLogs`.
-- **Soft Account Deactivation**: Employee accounts can be deactivated to immediately block sign-in without breaking foreign-key references in historical audit logs.
-- **First-Login Password Policy**: Newly created employee accounts are issued temporary passwords and prompted to change them on first login.
+- **Separate Roles for Managers and Employees**: Managers and employees see clean, customized dashboards suited to their work.
+- **Separate Progress and Approval Status**: Employees update progress (`Pending`, `In Progress`, `Submitted for Review`), while only Managers can approve (`Verified`) or ask for updates (`Changes Requested`).
+- **Smart Overdue Detection**: Tasks past their deadline automatically show as Overdue. Employees are not locked out and can still submit their work late.
+- **Evidence Version History**: If a manager asks for changes, the employee can resubmit. The app creates Version 2 without deleting Version 1, keeping full history.
+- **Required Reason for Changes**: A manager must type a clear explanation whenever they request changes on a submission.
+- **Activity History (Audit Trail)**: The app keeps a clean record of important actions: task creation, deadline changes, submissions, and approvals.
+- **Account Deactivation**: Managers can deactivate an employee account so they can no longer log in, while keeping all their past work intact.
+- **First-Time Password Change**: New employees are asked to set a new password the first time they log in.
 
 ---
 
 ## 4. Technology Stack
 
-- **Runtime**: Node.js
-- **Web Framework**: Express.js (v4)
-- **Database & ODM**: MongoDB Atlas / Local MongoDB with Mongoose (v8)
-- **Templating**: EJS (Embedded JavaScript) with shared partials
-- **Styling**: Vanilla CSS (Modern, accessible, responsive design system)
-- **Authentication**: `express-session` with `connect-mongo` session persistence
-- **Security**: `bcryptjs` for password hashing, session fixation protection, defense-in-depth authorization middleware
-- **Testing**: Native Node.js test runner (`node --test`)
+- **Backend**: Node.js and Express.js
+- **Database**: MongoDB (works with MongoDB Atlas in the cloud or local MongoDB) with Mongoose
+- **Templates**: EJS (HTML templates rendered on the server)
+- **Styling**: Plain CSS (clean, responsive on mobile and desktop)
+- **Login & Sessions**: `express-session` saved in MongoDB
+- **Security**: `bcryptjs` (passwords are safely hashed, never saved as plain text)
+- **Testing**: Built-in Node.js test runner (`node --test`)
 
 ---
 
-## 5. Architecture Overview
+## 5. Folder Structure
 
 ```text
-cleartrack/
+ClearTrack/
   config/
-    database.js         # Mongoose connection handler
+    database.js         # Connects to MongoDB
   controllers/
-    authController.js     # Login, logout, session regeneration, password change
-    dashboardController.js# Real-time statistics aggregation for both roles
-    employeeController.js # Team directory, employee creation, soft deactivation
-    taskController.js     # Task CRUD, ownership validation, evidence versioning
-    auditController.js    # Immutable audit trail viewer
+    authController.js     # Login, logout, change password
+    dashboardController.js# Dashboard statistics and task lists
+    employeeController.js # Team list, add employee, deactivate account
+    taskController.js     # Create, edit, submit evidence, and review tasks
+    auditController.js    # View activity history table
   middleware/
-    auth.js             # isAuthenticated, isManager, locals injector
+    auth.js             # Checks login status and manager role
   models/
-    User.js             # Unified user schema with bcrypt pre-save hook
-    Task.js             # Task schema with dynamic isOverdue virtual
-    EvidenceVersion.js  # Append-only evidence history linked to Task
-    AuditLog.js         # Central compliance audit collection
+    User.js             # User accounts and roles
+    Task.js             # Compliance tasks and deadlines
+    EvidenceVersion.js  # Saved versions of submitted evidence
+    AuditLog.js         # Activity records
   routes/
-    auth.routes.js      # /auth routes
+    auth.routes.js      # /auth routes (login, logout, password)
     dashboard.routes.js # /dashboard routes
-    employee.routes.js  # /employees routes (Manager only)
+    employee.routes.js  # /employees routes (manager only)
     task.routes.js      # /tasks routes
-    audit.routes.js     # /audit-logs routes (Manager only)
+    audit.routes.js     # /audit-logs routes (manager only)
   services/
-    auditService.js     # Centralized audit logging helper
+    auditService.js     # Helper function to save activity records
   views/
-    partials/           # header, footer, navbar, flash alerts
-    auth/               # login, change-password
-    dashboard/          # manager and employee dashboards
-    employees/          # directory, new, show, edit
-    tasks/              # index, new, show, edit
-    audit/              # audit trail table
-    errors/             # 403, 404, 500 error pages
+    partials/           # Reusable header, footer, navigation bar, alerts
+    auth/               # Login and password change pages
+    dashboard/          # Manager and employee dashboard pages
+    employees/          # Team list and employee forms
+    tasks/              # Task list, task details, and create task pages
+    audit/              # Activity log history page
+    errors/             # Friendly error pages (403, 404, 500)
   public/
-    css/style.css       # Clean responsive design system
+    css/style.css       # Clean styling
   scripts/
-    seed.js             # Safe demo account seeder
+    seed.js             # Adds sample data for testing
   tests/
-    cleartrack.test.js  # Automated test suite
-  server.js             # Express application entry point
+    cleartrack.test.js  # Automated tests
+  server.js             # App entry point
 ```
 
 ---
 
-## 6. Database Models
-
-1. **`User`**: `userId` (unique), `name`, `email`, `password` (bcrypt hash), `role` (`manager` | `employee`), `department`, `mustChangePassword`, `isDeactivated`.
-2. **`Task`**: `title`, `description`, `category`, `priority`, `assignee` (User ref), `createdBy` (User ref), `deadline`, `progressStatus`, `reviewStatus`, `completionNotes`, `latestReviewComment`.
-3. **`EvidenceVersion`**: `task` (Task ref), `versionNumber`, `evidenceUrls`, `notes`, `submittedBy` (User ref), `createdAt`.
-4. **`AuditLog`**: `actor` (User ref), `action`, `targetType`, `targetId`, `previousValues`, `newValues`, `reason`, `createdAt`.
-
----
-
-## 7. Installation & Configuration
+## 6. How to Set Up and Run Locally
 
 ### Prerequisites
-- Node.js (v18 or higher)
-- MongoDB running locally or a MongoDB Atlas URI
+- Node.js (version 18 or higher)
+- A MongoDB database (either local MongoDB or free MongoDB Atlas)
 
-### 1. Clone & Install Dependencies
+### Step 1: Install Dependencies
+Open your terminal in the project folder and run:
 ```bash
-git clone <repository-url>
-cd cleartrack
 npm install
 ```
 
-### 2. Configure Environment Variables
-Create a `.env` file in the root folder (or copy `.env.example`):
+### Step 2: Configure Environment Variables
+Create a file named `.env` in the project root (you can copy `.env.example`):
 ```env
 PORT=3000
 NODE_ENV=development
 MONGODB_URI=mongodb://127.0.0.1:27017/cleartrack
-SESSION_SECRET=your_secure_random_session_secret
+SESSION_SECRET=my_secret_key_12345
 ```
+*(If using MongoDB Atlas, paste your Atlas connection string in `MONGODB_URI`)*
 
----
-
-## 8. Seeding Demo Accounts
-
-Populate the database with demo accounts and initial compliance tasks:
+### Step 3: Add Sample Demo Data
+Run the seed script to set up demo accounts and sample tasks:
 ```bash
 node scripts/seed.js
 ```
 
-### Default Demo Credentials:
-| Persona | User ID | Password | Department | Highlighted Test Scenario |
-| :--- | :--- | :--- | :--- | :--- |
-| **Rahul Sharma (Lead Manager)** | `manager` | `Manager@123` | Compliance Operations | Full manager dashboard, review queue, create tasks, team audit trail |
-| **Rohan Verma (Employee 1)** | `emp101` | `Employee@123` | Cloud Security | Overdue task handling (`Encryption at Rest`) & Correction cycle (`PCI-DSS`) |
-| **Sneha Reddy (Employee 2)** | `emp102` | `Employee@123` | Finance & Governance | Completed & verified task attestation |
-| **Karthik Iyer (Employee 3)** | `emp103` | `Employee@123` | DevOps & Infrastructure | Task waiting in Manager's Review Queue (`Disaster Recovery Drill`) |
-| **Priya Sharma (Employee 4)** | `emp104` | `Employee@123` | Legal & Privacy | First-login password change flow & multi-version evidence resubmission |
-| **Rajesh Gupta (Contractor)** | `emp105` | `Employee@123` | External Audits | Deactivated account (login blocked, historical tasks preserved) |
-
----
-
-## 9. Running the Application
-
-### Development Mode (with auto-reload):
-```bash
-npm run dev
-```
-
-### Production Mode:
+### Step 4: Start the Server
 ```bash
 npm start
 ```
-
-Open your browser and navigate to:
+Then open your browser and go to:
 [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 10. Automated Tests
+## 7. Sample Accounts for Testing
 
-ClearTrack includes an automated test suite verifying all 19 functional and security requirements:
+After running the seed script, you can log in with any of these accounts:
+
+| Name | Role | User ID | Password | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **Rahul Sharma** | Manager | `manager` | `Manager@123` | Full access: assign tasks, review evidence, view audit logs |
+| **Rohan Verma** | Employee | `emp101` | `Employee@123` | Has active tasks and an overdue task to test late submission |
+| **Sneha Reddy** | Employee | `emp102` | `Employee@123` | Has an approved and verified task |
+| **Karthik Iyer** | Employee | `emp103` | `Employee@123` | Has a task waiting for manager review |
+| **Priya Sharma** | Employee | `emp104` | `Employee@123` | First-time login (prompts for new password) |
+| **Rajesh Gupta** | Employee | `emp105` | `Employee@123` | Deactivated account (shows how login is blocked) |
+
+---
+
+## 8. Automated Tests
+
+ClearTrack comes with an automated test suite that checks all core logic and rules:
 
 ```bash
 npm test
 ```
 
-### Verified Test Cases:
-- [x] Password hashing with bcrypt
-- [x] Login credential verification
-- [x] Session regeneration and logout
-- [x] Task ownership enforcement (cross-employee access rejected)
-- [x] Manager-only route protection
-- [x] Dynamic overdue calculation (without cron jobs)
-- [x] Non-blocking late submissions
-- [x] Immutable evidence version incrementation
-- [x] Mandatory manager correction reasons
-- [x] Task completion upon managerial verification
-- [x] Real-time audit log generation
-- [x] Soft deactivation preserving historical integrity
+### What the tests verify:
+- [x] Password hashing with bcrypt (no plain text passwords)
+- [x] Login and session handling
+- [x] Security: employees cannot view or edit tasks belonging to others
+- [x] Security: only managers can access manager routes
+- [x] Tasks automatically show as overdue when deadline passes
+- [x] Employees can still submit evidence even if a task is overdue
+- [x] Resubmitting evidence creates a new version without deleting previous ones
+- [x] Managers must provide a reason when requesting changes
+- [x] Task completes when verified by a manager
+- [x] Activity logs are saved for changes
+- [x] Deactivating a user blocks login while keeping their task history
 
 ---
 
-## 11. Deployment Guide (MongoDB Atlas & Node Hosting)
+## 9. Known Limitations
 
-1. **MongoDB Atlas**:
-   - Create a free M0 cluster on [MongoDB Atlas](https://www.mongodb.com/atlas).
-   - Under **Network Access**, add your hosting platform's IP (or `0.0.0.0/0` for cloud services like Render/Railway).
-   - Under **Database Access**, create a user and copy the connection string.
-2. **Environment Variables on Host**:
-   - `MONGODB_URI`: Atlas connection string (e.g., `mongodb+srv://user:pass@cluster.mongodb.net/cleartrack?retryWrites=true&w=majority`).
-   - `SESSION_SECRET`: A strong 64-character random string.
-   - `NODE_ENV`: `production`.
-3. **Run Seed on First Deploy**: Run `node scripts/seed.js` to create the initial manager account.
+- **Evidence Links**: Evidence is submitted as web links (such as Google Drive, Dropbox, AWS S3, or company portals) instead of uploading large files directly to the server.
+- **Single Team / Organization**: Built for one company workspace rather than multiple separate companies.
+- **In-App Notifications**: Task updates and overdue notices show inside the web app dashboards rather than sending emails or SMS.
 
 ---
 
-## 12. Known Limitations
-
-- **Evidence Hosted via URLs**: Supporting evidence is tracked via validated HTTPS URLs (e.g., Google Drive, AWS S3, SharePoint, internal dashboards) rather than direct binary file uploads to avoid server storage bloat and malware vectors.
-- **Single-Tenant Workspace**: Designed for a single organization's compliance operations; multi-tenant multi-organization isolation is not included in this release.
-- **In-App Notifications**: Deadline alerts and review notifications are rendered in real-time within user dashboards and audit feeds rather than third-party email/SMS gateways.
-- **Session-Based Authentication**: Built for server-side rendered browser sessions with secure HTTP-only cookies rather than a public headless REST API with JWT access tokens.
-
----
-
-## 13. Product Write-Up (VComply Submission)
+## 10. Product Write-Up (VComply Submission)
 
 ### 1. What problem does your tool solve, and who is the user?
-Small and mid-sized teams struggle with compliance readiness because regulatory tasks are tracked in ad-hoc spreadsheets, evidence is lost in email threads, and assignees often "check off" tasks without verifiable proof. **ClearTrack** provides an audit-ready action tracker for **Compliance Managers** (who assign obligations, review evidence, and verify completion) and **Employees/Assignees** (who execute controls, submit versioned evidence, and handle correction cycles).
+Many teams track compliance tasks in messy spreadsheets where tasks get lost, proof is missing, and nobody knows who verified what. **ClearTrack** fixes this by giving teams a simple, organized website to manage compliance work.
+There are two types of users:
+- **Managers**: Assign compliance tasks, check deadlines, review submitted proof, and approve or request changes.
+- **Employees**: View their assigned tasks, update their progress, and submit proof (links and notes) when done.
 
-### 2. Two or three most important product decisions made:
-1. **Separation of Execution and Verification**: Employees control progress status (`Pending` → `In Progress` → `Submitted for Review`), while only Managers can issue verification (`Verified` or `Changes Requested`). Employees can never self-certify compliance.
-2. **Dynamic, Non-Blocking Overdue Calculation**: Rather than running stale background cron jobs or locking users out when deadlines pass, overdue is derived dynamically (`now > deadline && unverified`). Assignees can still submit late work while overdue status remains transparently flagged.
-3. **Immutable Evidence Versioning**: Revising evidence never overwrites past records. Every submission creates version `N+1`, preserving all historic URLs, notes, and timestamps for auditors.
+### 2. What were the two or three most important product decisions you made, and why?
+1. **Only Managers Can Approve**: Employees can update progress and submit proof, but only a Manager can mark a task as `Verified`. This ensures that every completed task has real oversight.
+2. **Never Lock Out Late Submissions**: If a deadline passes, the task clearly shows as `Overdue`, but the employee can still submit their work. Deadlines should track timeliness without stopping people from finishing their job.
+3. **Keep Past Evidence (Version History)**: When a manager asks for changes and the employee resubmits, the app saves it as Version 2 without deleting Version 1. This keeps a clear history of all submissions.
 
-### 3. What was cut from scope, and what to build next:
-- **Cut from Scope**: Direct file uploads were replaced with validated external URLs (Google Drive, AWS S3, dashboards) to eliminate security vulnerabilities (malware) and storage bloat. Multi-step deadline extension approval workflows were cut in favor of direct manager deadline editing with audit logging.
-- **Build Next**: Automated Slack/Microsoft Teams webhook reminders for upcoming deadlines and one-click PDF/CSV compliance packet export for external auditors.
+### 3. What did you cut from scope, and what would you build next if you had more time?
+- **What was cut**: Direct file uploads. We decided to accept links (Google Drive, cloud storage) instead. This keeps the server fast, safe from malicious file uploads, and lightweight.
+- **What to build next**: Email or Slack alerts when a deadline is coming up, and an option to download task reports as a PDF or Excel sheet for audits.
 
-### 4. What broke or surprised us, and how it was handled:
-During cloud database seeding on Windows, the Node.js TLS handshake to MongoDB Atlas intermittently failed with `SSL alert number 80` due to Windows attempting IPv6 resolution on newly provisioned Atlas clusters. We diagnosed the network layer and resolved it by enforcing IPv4 DNS resolution (`family: 4`) in Mongoose connection options. Additionally, an HTML entity (`&rarr;`) was being escaped by EJS within dynamic button tags; we corrected it to clean plain text.
-
----
-
+### 4. What broke or surprised you during development, and how did you handle it?
+When connecting to MongoDB Atlas on Windows, the connection initially gave an SSL error. We found that Windows was trying to use IPv6 instead of IPv4. We fixed this simply by adding `{ family: 4 }` to the database connection settings. Also, an arrow symbol (`&rarr;`) on the submit button was showing up as raw text instead of an arrow, so we simplified the button text to plain, clear labels.
