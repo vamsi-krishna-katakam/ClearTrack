@@ -24,15 +24,26 @@ const PORT = process.env.PORT || 3000;
 // Trust reverse proxy (required for Render / Cloudflare / cloud hosts terminating SSL)
 app.set('trust proxy', true);
 
-// View engine setup
+// View engine setup (compatible with local and Vercel serverless)
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(process.cwd(), 'views'));
 
 // Core middleware
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(process.cwd(), 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride('_method'));
+
+// Ensure DB is connected for every request (essential for serverless lambda lifecycle)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('[DB Middleware Error]:', err.message);
+    res.status(500).render('errors/500', { title: 'Database Error' });
+  }
+});
 
 // Session configuration using connect-mongo
 app.use(session({
@@ -87,13 +98,17 @@ app.use((err, req, res, next) => {
   res.status(500).render('errors/500', { title: '500 - Server Error' });
 });
 
-// Start server
+// Start server locally (when not running in Vercel serverless environment)
 async function startServer() {
-  if (process.env.NODE_ENV !== 'test') {
-    await connectDB();
-    app.listen(PORT, () => {
-      console.log(`[ClearTrack Server] Running at: http://localhost:${PORT}`);
-    });
+  if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+    try {
+      await connectDB();
+      app.listen(PORT, () => {
+        console.log(`[ClearTrack Server] Running at: http://localhost:${PORT}`);
+      });
+    } catch (err) {
+      console.error('Failed to start server:', err);
+    }
   }
 }
 
