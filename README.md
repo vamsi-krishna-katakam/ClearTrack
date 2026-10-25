@@ -2,6 +2,13 @@
 
 > A simple, clear web application for tracking compliance tasks, submitting evidence, and getting manager approvals.
 
+🌐 **Live Application**: [https://clear-track-one.vercel.app](https://clear-track-one.vercel.app)  
+*(Backup Mirror: https://cleartrack-dtu6.onrender.com)*
+
+**Quick Demo Credentials:**
+- **Manager**: `manager` / `Manager@123`
+- **Employee**: `emp101` / `Employee@123`
+
 ---
 
 ## 1. Project Overview
