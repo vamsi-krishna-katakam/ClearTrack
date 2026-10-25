@@ -59,13 +59,20 @@ export async function handleLogin(req, res) {
 
       req.session.userId = user._id;
 
-      if (user.mustChangePassword) {
-        return res.redirect('/auth/change-password');
-      }
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error('Session save error:', saveErr);
+          return res.status(500).render('errors/500');
+        }
 
-      const returnUrl = req.session.returnTo || '/dashboard';
-      delete req.session.returnTo;
-      res.redirect(returnUrl);
+        if (user.mustChangePassword) {
+          return res.redirect('/auth/change-password');
+        }
+
+        const returnUrl = req.session.returnTo || '/dashboard';
+        delete req.session.returnTo;
+        res.redirect(returnUrl);
+      });
     });
   } catch (err) {
     console.error('Login error:', err);
